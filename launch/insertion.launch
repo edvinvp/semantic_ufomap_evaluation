@@ -1,0 +1,53 @@
+<?xml version="1.0" ?>
+<launch>
+	<arg name="dataset_folder" default="$(env HOME)/Downloads/" />
+	<arg name="dataset" default="data" />
+	<arg name="resolution" default="0.02" />
+	<arg name="color" default="true" />
+	<arg name="depth" default="3" />
+	<arg name="max_range" default="-1" />
+	<arg name="simple_ray_casting" default="true"/>
+	<arg name="early_stopping" default="0" />
+	<arg name="async" default="true" />
+	<arg name="automatic_pruning" default="false" />
+	<arg name="publish" default="false"/>
+	<arg name="publish_every_x" default="1"/>
+	<arg name="compress" default="true" />
+	<arg name="cloud_topic" default="/depth_registered/points" />
+	<arg name="transform_topic" default="/tf" />
+	<arg name="labels_topic" default="/camera/labels" />
+	<arg name="label_prob_increase" default="0.52" />
+	<arg name="label_prob_decrease" default="0.5" />
+	
+	<node pkg="rosbag" type="play" name="player" output="screen" args="--clock -r 1.0 /home/edvin/Dev/bags/scenenn_231_cropped_5499_labels.bag"/>
+	  <node pkg="nodelet" type="nodelet" name="nodelet_manager" args="manager" />
+	  <node pkg="nodelet" type="nodelet" name="nodelet1"
+		args="load depth_image_proc/point_cloud_xyzrgb nodelet_manager">
+	    <remap from="/rgb/camera_info" to="/camera/rgb/camera_info"/>
+	    <remap from="/depth_registered/image_rect" to="/camera/depth/image_raw"/>
+	    <remap from="/rgb/image_rect_color" to = "/camera/rgb/image_raw" />
+	    <remap from="points" to="/camera/depth/points"/>
+	</node>
+	<node pkg="tf2_ros" type="static_transform_publisher" name="link1_broadcaster" args="0 0 0 0 0 1.55 map_fixed map" />
+	 <node pkg="semantic_ufomap_test" type="semantic_ufomap_test" name="insertion" output="screen" required="true"> 
+		<!-- <node pkg="semantic_ufomap_test" type="semantic_ufomap_test" name="insertion" output="screen" required="true" launch-prefix="valgrind - -track-origins=yes - -error-limit=no - -leak-check=full - -show-leak-kinds=all"> -->
+		<param name="resolution" value="$(arg resolution)" />
+		<param name="color" value="$(arg color)" />
+		<param name="depth" value="$(arg depth)" />
+		<param name="max_range" value="$(arg max_range)" />
+		<param name="simple_ray_casting" value="$(arg simple_ray_casting)" />
+		<param name="early_stopping" value="$(arg early_stopping)" />
+		<param name="async" value="$(arg async)" />
+		<param name="automatic_pruning" value="$(arg automatic_pruning)" />
+		<param name="publish" value="$(arg publish)" />
+		<param name="publish_every_x" value="$(arg publish_every_x)" />
+		<param name="compress" value="$(arg compress)" />
+		<param name="bag_folder" value="$(arg dataset_folder)" />
+		<param name="bag" value="$(arg dataset).bag" />
+		<param name="cloud_topic" value="$(arg cloud_topic)" />
+		<param name="transform_topic" value="$(arg transform_topic)" />
+		<param name="labels_topic" value="$(arg labels_topic)" />
+		<param name="label_prob_increase" value="$(arg label_prob_increase)" />
+		<param name="label_prob_decrease" value="$(arg label_prob_decrease)" />
+	</node>
+</launch>
